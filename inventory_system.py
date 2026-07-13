@@ -27,7 +27,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 .block-container { padding-top: 1.5rem; }
 .kpi { background:#0f172a; border:1px solid #1e3a5f; border-radius:10px; padding:1.2rem 1rem; text-align:center; margin-bottom:0.5rem; }
 .kpi .label { color:#64748b; font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; }
-.kpi .value { color:#38bdf8; font-size:1.35rem; font-weight:700; font-family:'IBM Plex Mono'; white-space:nowrap; }
+.kpi .value { color:#38bdf8; font-size:1.8rem; font-weight:700; font-family:'IBM Plex Mono'; }
 .kpi .sub   { color:#94a3b8; font-size:0.75rem; }
 .kpi-red .value  { color:#ef4444; }
 .kpi-green .value { color:#22c55e; }
@@ -216,7 +216,7 @@ def _get_engine():
         st.stop()
 
 def _clean_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Standardise column types."""
+    """Standardise column types — same logic as before."""
     df["ITEM_CODE"]        = df["ITEM_CODE"].astype(str).str.strip()
     df["ITEM_DESCRIPTION"] = df["ITEM_DESCRIPTION"].astype(str).str.strip()
     df["QTY"]              = pd.to_numeric(df["QTY"], errors="coerce").fillna(0)
@@ -225,14 +225,6 @@ def _clean_df(df: pd.DataFrame) -> pd.DataFrame:
     df["SIH"]              = pd.to_numeric(df["SIH"], errors="coerce").fillna(0)
     df["TRANSACTION_DATE"] = pd.to_datetime(df["TRANSACTION_DATE"], errors="coerce")
     return df
-
-def _get_cache_ttl():
-    """Read CACHE_TTL from db_config, default 300s if not set."""
-    try:
-        import db_config
-        return db_config.CACHE_TTL
-    except Exception:
-        return 300
 
 @st.cache_data(ttl=_get_cache_ttl())
 def load_data():
@@ -264,6 +256,14 @@ def load_data():
     grn    = _clean_df(grn)
     issued = _clean_df(issued)
     return grn, issued, req
+
+def _get_cache_ttl():
+    """Read CACHE_TTL from db_config, default 300s if not set."""
+    try:
+        import db_config
+        return db_config.CACHE_TTL
+    except Exception:
+        return 300
 
 def get_item_info(grn, issued, item_code):
     g = grn[grn["ITEM_CODE"] == item_code]
